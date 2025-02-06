@@ -22,7 +22,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import conversationAtom from "../atoms/conversationsAtom";
 import { useSocket } from "../context/SocketContext";
 import userAtom from "../atoms/userAtom";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 
 export default function ChatPage() {
   let [conversations, setConversations] = useRecoilState(conversationAtom);

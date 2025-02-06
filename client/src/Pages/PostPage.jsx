@@ -5,10 +5,21 @@ import {
   Divider,
   Flex,
   FormControl,
+  HStack,
   Image,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalOverlay,
   SimpleGrid,
   Text,
   Textarea,
+  useDisclosure,
   VStack,
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
@@ -22,6 +33,9 @@ import { toast } from "react-toastify";
 import { useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import { formatDistanceToNow } from "date-fns";
+import CreatePost from "../components/CreatePost";
+import { FaEdit } from "react-icons/fa";
+import { MdDeleteForever } from "react-icons/md";
 
 export default function PostPage() {
   let user = useRecoilValue(userAtom);
@@ -31,6 +45,16 @@ export default function PostPage() {
   let [input, setInput] = useState("");
   let [replies, setReplies] = useState(null);
   let { pid } = useParams();
+  const {
+    isOpen: isOpen1,
+    onOpen: onOpen1,
+    onClose: onClose1,
+  } = useDisclosure();
+  const {
+    isOpen: isOpen2,
+    onOpen: onOpen2,
+    onClose: onClose2,
+  } = useDisclosure();
   let navigate = useNavigate();
   useEffect(() => {
     myAxios
@@ -80,6 +104,22 @@ export default function PostPage() {
       }
     }
   }, [handleRef.current]);
+
+  async function handleDelete() {
+    if (loading) return;
+    setLoading(true);
+    try {
+      let { data } = await myAxios.delete("post/" + post.id);
+      toast.success(data.message);
+      onClose2();
+      navigate(-1);
+    } catch ({ response }) {
+      toast.error(response.data.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return post && poster ? (
     <>
       <Flex
@@ -91,6 +131,38 @@ export default function PostPage() {
         flexDirection={"column"}
         gap={2}
       >
+        <CreatePost
+          mode="edit"
+          isOpen={isOpen1}
+          onClose={onClose1}
+          onOpen={onOpen1}
+          post={post}
+          setPost={setPost}
+        />
+        <Modal isOpen={isOpen2} onClose={onClose2}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalBody pt={6}>
+              <Text>Are you sure. you want to delete this post</Text>
+            </ModalBody>
+
+            <ModalFooter>
+              <HStack>
+                <Button colorScheme="blue" w={100} onClick={onClose2}>
+                  Close
+                </Button>
+                <Button
+                  colorScheme="red"
+                  isLoading={loading}
+                  w={100}
+                  onClick={handleDelete}
+                >
+                  Delete
+                </Button>
+              </HStack>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
         <Flex justifyContent={"space-between"} w={"full"}>
           <Flex alignItems={"center"}>
             <Avatar
@@ -128,10 +200,48 @@ export default function PostPage() {
             <Text fontStyle={"sm"} color={"gray.light"}>
               {formatDistanceToNow(new Date(post.createdAt))}
             </Text>
-            <BsThreeDots />
+            {poster.id === user.id && (
+              <Menu>
+                <MenuButton>
+                  <BsThreeDots />
+                </MenuButton>
+                <MenuList bg={"gray.dark"}>
+                  <MenuItem
+                    onClick={onOpen2}
+                    bg={"gray.dark"}
+                    color={"red"}
+                    justifyContent={"space-between"}
+                    fontWeight={"bold"}
+                    fontSize={"15px"}
+                    transition={"all .3s"}
+                    _hover={{ bg: "gray.700" }}
+                  >
+                    Delete Post
+                    <MdDeleteForever size={22} />
+                  </MenuItem>
+                  <MenuItem
+                    onClick={onOpen1}
+                    bg={"gray.dark"}
+                    color={"blue"}
+                    justifyContent={"space-between"}
+                    fontWeight={"bold"}
+                    fontSize={"15px"}
+                    transition={"all .3s"}
+                    _hover={{ bg: "gray.700" }}
+                  >
+                    Edit Post
+                    <FaEdit size={22} />
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            )}
           </Flex>
         </Flex>
-        {post.text && <Text fontSize={"sm"}>{post.text}</Text>}
+        {post.text && (
+          <Text fontSize={"sm"} whiteSpace={"pre-wrap"}>
+            {post.text}
+          </Text>
+        )}
         {post.imgs.length !== 0 && (
           <SimpleGrid
             mt={post.text ? 0 : 2}

@@ -18,6 +18,20 @@ let userSchema = new Schema(
     followers: { type: [Number], default: [] },
     following: { type: [Number], default: [] },
     bio: { type: String, default: "" },
+    isVerifyed: {
+      type: Boolean,
+      default: false,
+    },
+    verifyOtp: {
+      type: String,
+      default: "",
+    },
+    verifyOtpExpireAt: { type: Number, default: 0 },
+    resetOtp: {
+      type: String,
+      default: "",
+    },
+    resetOtpExpireAt: { type: Number, default: 0 },
   },
   {
     timestamps: true,

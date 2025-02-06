@@ -2,6 +2,7 @@ import express from "express";
 import {
   createPost,
   deletePost,
+  editPost,
   getFeedPost,
   getPost,
   getProfilePost,
@@ -13,7 +14,11 @@ import { createPostMiddleware } from "../middlewares/postsMiddlewares.js";
 
 let router = express.Router();
 router.get("/feed", verifyToken, getFeedPost);
-router.route("/:id").get(getPost).delete(verifyToken, deletePost);
+router
+  .route("/:id")
+  .get(getPost)
+  .delete(verifyToken, deletePost)
+  .put(verifyToken, editPost);
 router.post("/create", verifyToken, createPostMiddleware, createPost);
 router.put("/like/:id", verifyToken, likeUnlike);
 router.get("/profile/:id", getProfilePost);

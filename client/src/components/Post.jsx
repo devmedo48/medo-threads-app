@@ -35,10 +35,20 @@ import { FaEdit } from "react-icons/fa";
 import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import postsAtom from "../atoms/postsAtom";
+import CreatePost from "./CreatePost";
 
 export default function Post({ post, posterId }) {
   let [posts, setPosts] = useRecoilState(postsAtom);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isOpen1,
+    onOpen: onOpen1,
+    onClose: onClose1,
+  } = useDisclosure();
+  const {
+    isOpen: isOpen2,
+    onOpen: onOpen2,
+    onClose: onClose2,
+  } = useDisclosure();
   let [loading, setLoading] = useState(false);
 
   let navigate = useNavigate();
@@ -67,7 +77,7 @@ export default function Post({ post, posterId }) {
     try {
       let { data } = await myAxios.delete("post/" + post.id);
       toast.success(data.message);
-      onClose();
+      onClose2();
       setPosts(posts + 1);
     } catch ({ response }) {
       toast.error(response.data.message);
@@ -77,7 +87,14 @@ export default function Post({ post, posterId }) {
   }
   return poster ? (
     <Flex gap={3} mb={4} py={5}>
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <CreatePost
+        mode="edit"
+        isOpen={isOpen1}
+        onClose={onClose1}
+        onOpen={onOpen1}
+        post={post}
+      />
+      <Modal isOpen={isOpen2} onClose={onClose2}>
         <ModalOverlay />
         <ModalContent>
           <ModalBody pt={6}>
@@ -86,7 +103,7 @@ export default function Post({ post, posterId }) {
 
           <ModalFooter>
             <HStack>
-              <Button colorScheme="blue" w={100} onClick={onClose}>
+              <Button colorScheme="blue" w={100} onClick={onClose2}>
                 Close
               </Button>
               <Button
@@ -172,7 +189,6 @@ export default function Post({ post, posterId }) {
           )}
         </Box>
       </Flex>
-
       <Flex flex={1} flexDirection={"column"} gap={2}>
         <Flex justifyContent={"space-between"} alignItems={"start"} w={"full"}>
           <VStack
@@ -209,7 +225,7 @@ export default function Post({ post, posterId }) {
                 </MenuButton>
                 <MenuList bg={"gray.dark"}>
                   <MenuItem
-                    onClick={onOpen}
+                    onClick={onOpen2}
                     bg={"gray.dark"}
                     color={"red"}
                     justifyContent={"space-between"}
@@ -222,7 +238,7 @@ export default function Post({ post, posterId }) {
                     <MdDeleteForever size={22} />
                   </MenuItem>
                   <MenuItem
-                    onClick={handleDelete}
+                    onClick={onOpen1}
                     bg={"gray.dark"}
                     color={"blue"}
                     justifyContent={"space-between"}
@@ -245,6 +261,7 @@ export default function Post({ post, posterId }) {
             onClick={() => navigate(`/${poster.username}/post/` + post.id)}
             cursor={"pointer"}
             fontSize={"sm"}
+            whiteSpace={"pre-wrap"}
           >
             {post.text}
           </Text>

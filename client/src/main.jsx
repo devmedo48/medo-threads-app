@@ -13,6 +13,7 @@ import { mode } from "@chakra-ui/theme-tools";
 import { BrowserRouter } from "react-router-dom";
 import { RecoilRoot } from "recoil";
 import SocketContextProvider from "./context/SocketContext.jsx";
+import { HelmetProvider } from "react-helmet-async";
 
 const styles = {
   global: (props) => ({
@@ -53,8 +54,12 @@ createRoot(document.getElementById("root")).render(
       <BrowserRouter>
         <RecoilRoot>
           <SocketContextProvider>
-            <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-            <App />
+            <HelmetProvider>
+              <ColorModeScript
+                initialColorMode={theme.config.initialColorMode}
+              />
+              <App />
+            </HelmetProvider>
           </SocketContextProvider>
         </RecoilRoot>
       </BrowserRouter>

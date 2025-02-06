@@ -8,10 +8,10 @@ import { useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import CreatePost from "../components/CreatePost";
 import Loading from "../components/Loading";
-import { Grid, Spinner, Text } from "@chakra-ui/react";
+import { Grid, Spinner, Text, useDisclosure } from "@chakra-ui/react";
 import Post from "../components/Post";
 import postsAtom from "../atoms/postsAtom";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 
 export default function UserPage() {
   const [user, setUser] = useState(null);
@@ -20,6 +20,7 @@ export default function UserPage() {
   let { username } = useParams();
   let currentUser = useRecoilValue(userAtom);
   let navigate = useNavigate();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   useEffect(() => {
     myAxios
       .get("profile/" + username)
@@ -45,10 +46,12 @@ export default function UserPage() {
   }, [user, post]);
   return user ? (
     <>
+      {currentUser.id === user.id && (
+        <CreatePost isOpen={isOpen} onClose={onClose} onOpen={onOpen} />
+      )}
       <Helmet>
         <title>{user.name.split(" ")[0]}&apos;s Profile</title>
       </Helmet>
-      {currentUser.id === user.id && <CreatePost />}
       <UserHeader user={user} />
       {posts ? (
         posts.map((post, index) => (
@@ -65,6 +68,11 @@ export default function UserPage() {
       )}
     </>
   ) : (
-    <Loading />
+    <>
+      <Helmet>
+        <title>User Page</title>
+      </Helmet>
+      <Loading />
+    </>
   );
 }

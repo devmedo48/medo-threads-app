@@ -18,12 +18,15 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import { myAxios } from "../Api/myAxios";
 import usePreviewImg from "../hooks/usePreviewImg";
 import { SmallCloseIcon } from "@chakra-ui/icons";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
+import authScreenAtom from "../atoms/authAtom";
+import passAtom from "../atoms/passAtom";
+import otpAtom from "../atoms/otpAtom";
 
 export default function UpdateProfilePage() {
   let navigate = useNavigate();
@@ -31,10 +34,13 @@ export default function UpdateProfilePage() {
   let [loading, setLoading] = useState(false);
   let fileRef = useRef();
   let { handleImageChange, imgUrls, setImageUrls } = usePreviewImg();
-  let [close, setClose] = useState(false);
+  let [close, setClose] = useState(true);
+  let setAuthScreen = useSetRecoilState(authScreenAtom);
+  let setPassScreen = useSetRecoilState(passAtom);
+  let setOtpCounter = useSetRecoilState(otpAtom);
   useEffect(() => {
-    if (!user.profilePic) setClose(true);
-  }, []);
+    if (user.profilePic) setClose(false);
+  }, [user]);
   let [form, setForm] = useState({
     name: user.name,
     username: user.username,
@@ -162,7 +168,28 @@ export default function UpdateProfilePage() {
           />
         </FormControl>
         <Text>
-          To change password <Link color={"blue.400"}>Click here</Link>
+          To change password{" "}
+          <Link
+            color={"blue.400"}
+            onClick={async () => {
+              try {
+                setAuthScreen("resetPass");
+                setPassScreen("otp");
+                navigate("/auth");
+                setOtpCounter(60);
+                let { data } = await myAxios.get("sendresetotp", {
+                  params: {
+                    email: user.email,
+                  },
+                });
+                toast.success(data.message);
+              } catch ({ response }) {
+                toast.error(response.data.message);
+              }
+            }}
+          >
+            Click here
+          </Link>
         </Text>
         <Stack spacing={6} direction={["column", "row"]}>
           <Button
@@ -172,7 +199,7 @@ export default function UpdateProfilePage() {
             _hover={{
               bg: "red.500",
             }}
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/" + user.username)}
           >
             Cancel
           </Button>

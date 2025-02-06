@@ -22,7 +22,7 @@ import { myAxios } from "../Api/myAxios";
 import { toast } from "react-toastify";
 import userAtom from "../atoms/userAtom";
 import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 
 export default function SignupCard() {
   const [showPassword, setShowPassword] = useState(false);

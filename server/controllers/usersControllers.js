@@ -5,6 +5,11 @@ import postModel from "../models/postModel.js";
 import jwtToken from "../utils/jwt.js";
 import appError from "../utils/appError.js";
 import { v2 as cloudinary } from "cloudinary";
+import sendMail from "../config/nodemailer.js";
+import {
+  EMAIL_VERIFY_TEMPLATE as verify,
+  PASSWORD_RESET_TEMPLATE as reset,
+} from "../Templates/emailTemplates.js";
 
 export let register = handleError(async (req, res, next) => {
   let { id, name, username, email, password } = req.body;
@@ -30,6 +35,14 @@ export let register = handleError(async (req, res, next) => {
 
   await jwtToken(id, res);
 
+  let mailOptions = {
+    email,
+    subject: "Welcom to Medo Social App",
+    text: `Welcom to Medo Social App, Your email has been created with email id: ${email}`,
+  };
+
+  await sendMail(mailOptions);
+
   res.status(201).json({
     message: "You have registered successfully",
     success: true,
@@ -51,6 +64,13 @@ export let login = handleError(async (req, res, next) => {
     delete user._doc.updatedAt;
     if (isPasswordCorrect) {
       await jwtToken(user.id, res);
+      let mailOptions = {
+        email: req.body.email,
+        subject: "welcom to Medo Social App",
+        html: "<h1 style='color:blue;text-align:center'>welcome to Medo Social App</h1>",
+      };
+
+      await sendMail(mailOptions);
       res.json({
         message: "You have loggedin successfully",
         success: true,
@@ -227,4 +247,154 @@ export let followUnfollow = handleError(async (req, res, next) => {
     success: true,
     user: currentUser,
   });
+});
+
+export let sendVerifyOtp = handleError(async (req, res, next) => {
+  let id = req.body.userId;
+
+  let user = await userModel.findOne({ id }, { password: 0 });
+
+  if (user) {
+    if (user.isVerifyed) {
+      return next(new appError("This account has been already verifyed", 400));
+    } else {
+      let otp = String(Math.floor(100000 + Math.random() * 900000));
+      user.verifyOtp = otp;
+      user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
+      await user.save();
+      let html = verify
+        .replace("{{otp}}", otp)
+        .replace("{{email}}", user.email);
+      let mailOptions = {
+        email: user.email,
+        subject: "Account Verificaion OTP",
+        html,
+      };
+      await sendMail(mailOptions);
+
+      res.json({
+        success: true,
+        message: "verification OTP is sent to your email",
+      });
+    }
+  } else {
+    return next(new appError("User is not found. Please register frist", 404));
+  }
+});
+
+export let verifyEmail = handleError(async (req, res, next) => {
+  let id = req.body.userId;
+  let otp = req.body.otp;
+  let user = await userModel.findOne({ id }, { password: 0 });
+  if (!otp) {
+    return next(new appError("Missing Detailes", 400));
+  }
+  if (!user) {
+    return next(new appError("User is not found. Please register frist", 404));
+  }
+  if (user.verifyOtpExpireAt < Date.now()) {
+    return next(new appError("OTP is expired. please generate a new OTP", 400));
+  }
+  if (otp === user.verifyOtp) {
+    user.verifyOtp = "";
+    user.verifyOtpExpireAt = 0;
+    user.isVerifyed = true;
+    await user.save();
+    res.json({
+      success: true,
+      message: "your email has been verifyed successfully",
+    });
+  } else {
+    return next(new appError("Wrong OTP", 400));
+  }
+});
+
+export let sendResetOtp = handleError(async (req, res, next) => {
+  let email = req.query.email;
+  if (!email) {
+    return next(new appError("Email is required", 400));
+  }
+
+  let user = await userModel.findOne({ email }, { password: 0 });
+
+  if (user) {
+    let otp = String(Math.floor(100000 + Math.random() * 900000));
+    user.resetOtp = otp;
+    user.resetOtpExpireAt = Date.now() + 15 * 60 * 1000;
+    await user.save();
+
+    let html = reset.replace("{{otp}}", otp).replace("{{email}}", email);
+    let mailOptions = {
+      email,
+      subject: "Reset password OTP",
+      html,
+    };
+    await sendMail(mailOptions);
+
+    res.json({
+      success: true,
+      message: "reset password OTP is sent to your email",
+    });
+  } else {
+    return next(new appError("User is not found", 404));
+  }
+});
+
+export let checkResetOtp = handleError(async (req, res, next) => {
+  let { otp, email } = req.body;
+  let user = await userModel.findOne(
+    { email },
+    {
+      __v: 0,
+      _id: 0,
+      password: 0,
+    }
+  );
+  if (user) {
+    if (otp !== user.resetOtp) {
+      return next(new appError("Wrong OTP", 404));
+    }
+    if (user.resetOtpExpireAt < Date.now) {
+      return next(new appError("OTP is expired. genrate new OTP", 404));
+    }
+    res.json({
+      success: true,
+      message: "correct otp",
+    });
+  } else {
+    return next(new appError("User is not found", 404));
+  }
+});
+
+export let resetPassword = handleError(async (req, res, next) => {
+  let { email, otp, password } = req.body;
+  if (password.length < 6)
+    return next(
+      new appError("Password length must be greater than 6 chars", 400)
+    );
+  let user = await userModel.findOne({ email });
+
+  if (user) {
+    if (user.resetOtpExpireAt < Date.now()) {
+      return next(
+        new appError("OTP is expired. please generate a new OTP", 400)
+      );
+    }
+    if (otp === user.resetOtp) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      user.resetOtp = "";
+      user.resetOtpExpireAt = 0;
+      user.password = hashedPassword;
+      await user.save();
+      res.json({
+        success: true,
+        message: "your password has been reset successfully",
+      });
+    } else {
+      return next(new appError("Wrong OTP", 400));
+    }
+  } else {
+    return next(new appError("User is not found", 404));
+  }
 });

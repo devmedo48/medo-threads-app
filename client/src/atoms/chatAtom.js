@@ -1,6 +1,6 @@
 import { atom } from "recoil";
 
-let chatAtom = atom({
+const chatAtom = atom({
   key: "chat",
   default: false,
 });

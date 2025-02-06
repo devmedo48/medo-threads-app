@@ -20,13 +20,17 @@ import authScreenAtom from "../atoms/authAtom";
 import { myAxios } from "../Api/myAxios";
 import { toast } from "react-toastify";
 import userAtom from "../atoms/userAtom";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
+import { useNavigate } from "react-router-dom";
+import passAtom from "../atoms/passAtom";
 
 export default function LoginCard() {
   const [showPassword, setShowPassword] = useState(false);
   let setAuthScreen = useSetRecoilState(authScreenAtom);
   const setUser = useSetRecoilState(userAtom);
   let [loading, setLoading] = useState(false);
+  let setPassScreen = useSetRecoilState(passAtom);
+  let navigate = useNavigate();
   let [form, setForm] = useState({
     userEmail: "",
     password: "",
@@ -40,6 +44,7 @@ export default function LoginCard() {
         toast.success(data.message);
         localStorage.setItem("user", JSON.stringify(data.user));
         setUser(data.user);
+        navigate("/");
       }
     } catch (error) {
       toast.error(error.response.data.message);
@@ -99,7 +104,7 @@ export default function LoginCard() {
                 </InputRightElement>
               </InputGroup>
             </FormControl>
-            <Stack spacing={10} pt={2}>
+            <Stack spacing={10} pt={2} gap={1}>
               <Button
                 loadingText="Logging in"
                 size="lg"
@@ -113,6 +118,15 @@ export default function LoginCard() {
               >
                 Login
               </Button>
+              <Link
+                color="purple.400"
+                onClick={() => {
+                  setAuthScreen("resetPass");
+                  setPassScreen("email");
+                }}
+              >
+                Forget Password ?
+              </Link>
             </Stack>
             <Stack pt={6}>
               <Text align={"center"}>

@@ -3,14 +3,15 @@ import { useEffect, useState } from "react";
 import { myAxios } from "../Api/myAxios";
 import Loading from "../components/Loading";
 import Post from "../components/Post";
-import { Helmet } from "react-helmet";
-import { Box, Flex } from "@chakra-ui/react";
+import { Helmet } from "react-helmet-async";
+import { Box, Flex, useDisclosure } from "@chakra-ui/react";
 import SuggestedUsers from "../components/SuggestedUsers";
 
 export default function HomePage() {
   let [loading, setLoading] = useState(true);
   let [posts, setPosts] = useState([]);
   let [noFeed, setNoFeed] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
   useEffect(() => {
     myAxios
       .get("post/feed")
@@ -40,7 +41,7 @@ export default function HomePage() {
         {noFeed && (
           <h1 style={{ textAlign: "center", marginTop: "20px" }}>{noFeed}</h1>
         )}
-        <CreatePost />
+        <CreatePost isOpen={isOpen} onClose={onClose} onOpen={onOpen} />
       </Box>
       <Box flex={30}>
         <SuggestedUsers />

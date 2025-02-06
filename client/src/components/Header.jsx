@@ -7,7 +7,6 @@ import userAtom from "../atoms/userAtom";
 import { useNavigate } from "react-router-dom";
 import LogoutBtn from "./LogoutBtn";
 import { BsFillChatDotsFill } from "react-icons/bs";
-
 export default function Header() {
   let { colorMode, toggleColorMode } = useColorMode();
   let navigate = useNavigate();
@@ -15,11 +14,11 @@ export default function Header() {
   return (
     <Flex justifyContent={"space-between"} mt={6} mb={9}>
       {user && (
-        <IconButton onClick={() => navigate("/")} variant="outline" size="md">
+        <IconButton onClick={() => navigate("/")} variant="outline">
           <AiFillHome />
         </IconButton>
       )}
-      <IconButton onClick={toggleColorMode} variant="outline" size="md">
+      <IconButton onClick={toggleColorMode} variant="outline">
         {colorMode === "light" ? <LuSun /> : <LuMoon />}
       </IconButton>
       <HStack>
@@ -28,15 +27,10 @@ export default function Header() {
             <IconButton
               onClick={() => navigate("/" + user.username)}
               variant="outline"
-              size="md"
             >
               <RxAvatar />
             </IconButton>
-            <IconButton
-              onClick={() => navigate("/chat")}
-              variant="outline"
-              size="md"
-            >
+            <IconButton onClick={() => navigate("/chat")} variant="outline">
               <BsFillChatDotsFill />
             </IconButton>
           </>

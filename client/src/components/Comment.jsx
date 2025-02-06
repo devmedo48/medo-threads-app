@@ -58,7 +58,9 @@ export default function Comment({
               <BsThreeDots />
             </Flex>
           </Flex>
-          <Text>{comment}</Text>
+          <Text fontSize={"sm"} whiteSpace={"pre-wrap"}>
+            {comment}
+          </Text>
         </Flex>
       </Flex>
       <Divider w={"80%"} mx={"auto"} />

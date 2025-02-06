@@ -62,6 +62,43 @@ export let deletePost = handleError(async (req, res, next) => {
   });
 });
 
+export let editPost = handleError(async (req, res, next) => {
+  let id = +req.params.id;
+  let { userId, text, imgs } = req.body;
+  const maxLength = 500;
+  if (text.length > maxLength)
+    return next(new appError(`Text must be less than ${maxLength} characters`));
+  let post = await postModel.findOne({ id });
+  if (!post) return next(new appError("Post not found", 404));
+  if (post.postedBy !== userId)
+    return next(new appError("Unauthorized to edit post", 401));
+  let images = [];
+  if (imgs) {
+    for (let img of imgs) {
+      if (!post.imgs.includes(img)) {
+        let { secure_url } = await cloudinary.uploader.upload(img);
+        images.push(secure_url);
+      } else {
+        images.push(img);
+      }
+    }
+    for (let img of post.imgs) {
+      if (!imgs.includes(img)) {
+        await cloudinary.uploader.destroy(img.split("/").pop().split(".")[0]);
+      }
+    }
+  }
+  console.log(images);
+  post.text = text;
+  post.imgs = images;
+  await post.save();
+  res.json({
+    success: true,
+    message: "post has updated successfully",
+    post,
+  });
+});
+
 export let likeUnlike = handleError(async (req, res, next) => {
   let { userId } = req.body;
   let id = +req.params.id;

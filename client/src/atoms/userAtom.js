@@ -1,6 +1,6 @@
 import { atom } from "recoil";
 
-let userAtom = atom({
+const userAtom = atom({
   key: "userAtom",
   default: JSON.parse(localStorage.user || false),
 });
