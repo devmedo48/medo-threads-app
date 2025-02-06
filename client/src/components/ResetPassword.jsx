@@ -30,6 +30,7 @@ import passAtom from "../atoms/passAtom";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import authScreenAtom from "../atoms/authAtom";
 import { FaArrowAltCircleRight } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 export default function ResetPassword() {
   const user = useRecoilValue(userAtom);
@@ -40,6 +41,7 @@ export default function ResetPassword() {
   let [otpCounter, setOtpCounter] = useRecoilState(otpAtom);
   let [passScreen, setPassScreen] = useRecoilState(passAtom);
   let setAuthScreen = useSetRecoilState(authScreenAtom);
+  let navigate = useNavigate();
   let [otp, setOtp] = useState("");
   async function handleResetPassword(e, resend = false) {
     if (!resend) setLoading(true);
@@ -78,6 +80,7 @@ export default function ResetPassword() {
           });
           data = res.data;
           setAuthScreen("login");
+          if (user) navigate("/" + user.username);
         }
       }
       toast.success(data.message);
@@ -91,7 +94,7 @@ export default function ResetPassword() {
     <>
       <Flex w={"full"} align={"center"} justify={"center"}>
         <Helmet>
-          <title>Chnge Password Page</title>
+          <title>Change Password Page</title>
         </Helmet>
         <Stack w={"full"} spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
           <Stack align={"center"}>
